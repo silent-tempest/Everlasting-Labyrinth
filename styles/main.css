@@ -1,0 +1,132 @@
+/**
+ * Importing fonts.
+ */
+@font-face {
+  font-family: UbuntuFont;
+  font-weight: 500;
+  src: url( '../fonts/Ubuntu-Medium.ttf' );
+}
+
+html, body, canvas {
+  margin: 0;
+}
+
+/**
+ * 1. Remove scroll and "pull-down-to-refresh".
+ */
+html, body {
+  padding: 0;
+  overflow: hidden; /* 1 */
+}
+
+/**
+ * Several canvases will be used.
+ */
+canvas,
+div {
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+div {
+  background: transparent;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+div.active {
+  -webkit-animation: level-overlay 1s linear;
+          animation: level-overlay 1s linear;
+}
+
+p {
+  position: fixed;
+  display: inline-block;
+  color: #fff;
+  top: 50%;
+  left: 100%;
+  white-space: nowrap;
+  font: 500 32px UbuntuFont, sans-serif;
+}
+
+div.active p {
+  -webkit-transform: translate( -50%, -50% );
+      -ms-transform: translate( -50%, -50% );
+          transform: translate( -50%, -50% );
+  -webkit-animation: level 1s linear;
+          animation: level 1s linear;
+}
+
+@-webkit-keyframes level-overlay {
+  0% {
+    background: transparent;
+  }
+
+  20% {
+    background: rgba( 0, 0, 0, 0.75 );
+  }
+
+  80% {
+    background: rgba( 0, 0, 0, 0.75 );
+  }
+
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes level-overlay {
+  0% {
+    background: transparent;
+  }
+
+  20% {
+    background: rgba( 0, 0, 0, 0.75 );
+  }
+
+  80% {
+    background: rgba( 0, 0, 0, 0.75 );
+  }
+
+  100% {
+    background: transparent;
+  }
+}
+
+@-webkit-keyframes level {
+  0% {
+    left: -10%;
+  }
+
+  20% {
+    left: 40%;
+  }
+
+  80% {
+    left: 60%;
+  }
+
+  100% {
+    left: 110%;
+  }
+}
+
+@keyframes level {
+  0% {
+    left: -10%;
+  }
+
+  20% {
+    left: 40%;
+  }
+
+  80% {
+    left: 60%;
+  }
+
+  100% {
+    left: 110%;
+  }
+}

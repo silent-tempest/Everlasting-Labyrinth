@@ -1,0 +1,81 @@
+<!-- saved from url=(0014)about:internet -->
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+
+<head>
+  <title>Everlasting Labyrinth</title>
+  <!-- Set charset to UTF-8. -->
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <!-- Some weird bullshit. -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="format-detection" content="adress=no" />
+  <!-- Some Mobile Web Application stuff ("add to home screen"). -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="Everlasting Labyrinth" />
+  <meta name="apple-mobile-web-app-title" content="Everlasting Labyrinth" />
+  <meta name="msapplication-starturl" content="index.html" />
+  <!-- Action Bar background color. -->
+  <meta name="theme-color" content="#000" />
+  <meta name="msapplication-navbutton-color" content="#000" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <!-- Adaptation for mobile devices. -->
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui, shrink-to-fit=no" />
+  <!-- Some SEO and copyright stuff.  -->
+  <meta name="description" content="Play Everlasting Labyrinth game now." />
+  <meta name="keywords" content="play,everlasting,labyrinth,maze,game,silent,tempest" />
+  <meta name="author" content="SILENT - https://github.com/silent-tempest" />
+  <meta name="copyright" content="SILENT" />
+  <!-- Importing styles and Web App Manifest. -->
+  <link rel="stylesheet" href="styles/main.css" />
+  <link rel="manifest" href="manifest.json" />
+  <!-- Importing icons. -->
+  <link rel="icon" type="image/png" sizes="48x48" href="drawable/icon-48.png" />
+  <link rel="apple-touch-icon" type="image/png" sizes="48x48" href="drawable/icon-48.png" />
+  <link rel="icon" type="image/png" sizes="96x96" href="drawable/icon-96.png" />
+  <link rel="apple-touch-icon" type="image/png" sizes="96x96" href="drawable/icon-96.png" />
+  <link rel="icon" type="image/png" sizes="144x144" href="drawable/icon-144.png" />
+  <link rel="apple-touch-icon" type="image/png" sizes="144x144" href="drawable/icon-144.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="drawable/icon-192.png" />
+  <link rel="apple-touch-icon" type="image/png" sizes="192x192" href="drawable/icon-192.png" />
+</head>
+
+<body>
+
+  <div id="overlay">
+    <p>Level <span id="level">1</span></p>
+  </div>
+
+  <noscript>
+    <div>That application doesn't work without JavaScript.</div>
+  </noscript>
+
+  <!-- jQuery + Lodash. -->
+  <script src="scripts/peako.js"></script>
+  <!-- Render engine. -->
+  <script src="scripts/v6.js"></script>
+  <!-- Maze Generator. -->
+  <script src="scripts/mazegenerator.js"></script>
+  <!-- Main game script. -->
+  <script src="scripts/main.js"></script>
+
+  <!-- Register the Service Worker ("add to home screen", caching). -->
+  <script>
+    if ( 'serviceWorker' in navigator ) {
+      navigator.serviceWorker.register( 'service-worker.js' )
+        .then( function ( registration ) {
+          console.log( 'Registration succeeded. Scope is ' + registration.scope );
+        }, function ( ex ) {
+          console.log( 'Registration failed with ' + ex );
+        } );
+    }
+  </script>
+
+</body>
+
+</html>
+
