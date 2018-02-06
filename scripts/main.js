@@ -186,7 +186,7 @@ if ( touchable ) {
         identifiers = _.create( null ),
         start = that.start = v6.vec2(),
         location = that.location = v6.vec2(),
-        touch_zone, x, y;
+        touch_zone;
 
     var touchstart = function ( event ) {
       var touches = event.changedTouches,
@@ -245,11 +245,8 @@ if ( touchable ) {
       while ( i > 0 ) {
         if ( identifiers[ id = touches[ --i ].identifier ] ) {
           if ( unset ) {
-            location.set( 0, 0 );
-            start.set( x, y );
-            that.state = 0;
-            that.redraw = unset = true;
-            that._angle = that._value = null;
+            that.cancel();
+            unset = true;
           }
 
           identifiers[ id ] = false;
@@ -268,8 +265,8 @@ if ( touchable ) {
         renderer.height );
 
       start.set(
-        x = foo( options.x, renderer.width ),
-        y = foo( options.y, renderer.height ) );
+        that.x = foo( options.x, renderer.width ),
+        that.y = foo( options.y, renderer.height ) );
 
       that.redraw = true;
     };
@@ -312,6 +309,15 @@ if ( touchable ) {
       return this._angle == null ?
         this._angle = this.location.angle() :
         this._angle;
+    },
+
+    cancel: function () {
+      this.location.set( 0, 0 );
+      this.start.set( this.x, this.y );
+      this.state = 0;
+      this.redraw = true;
+      this._angle = this._value = null;
+      return this;
     },
 
     colors: [
@@ -458,6 +464,28 @@ var Reset = function () {
   }, 1000 );
 };
 
+var Restart = function () {
+  ticker.stop();
+  // fix joystick
+  stick.cancel();
+
+  // built-in `confirm` only temporary solution
+  if ( window.confirm( 'Do you really want to restart this level?' ) ) {
+    // fix animation using `setTimeout`
+    window.setTimeout( function () {
+      Reset();
+
+      ticker
+        .clear( true )
+        .tick();
+    }, 1 );
+  } else {
+    ticker
+      .clear()
+      .tick();
+  }
+};
+
 var Resize = function () {
   renderer.fullwindow();
   camera.offset.set(
@@ -467,8 +495,61 @@ var Resize = function () {
 
 var ui = {
   init: function () {
-    this[ '#overlay' ] = _( '#overlay' );
-    this[ '#level' ] = _( '#level' );
+    _.forEachRight( [
+      '#restart',
+      '#overlay',
+      '#level'
+    ], function ( selector ) {
+      this[ selector ] = _( selector );
+    }, this );
+
+    // as always, i have complicated everything very much
+    // i hate default :focus and :hover behavior
+    var touchstart = function ( event ) {
+      // to fix firefox
+      if ( touchable ) {
+        event = event.targetTouches[ 0 ];
+        this.touched = true;
+        this.touch.set( event.clientX, event.clientY );
+      }
+
+      _( this ).addClass( 'active' );
+    };
+
+    var touchend = function () {
+      if ( touchable ) {
+        if ( this.touched ) {
+          Restart();
+        }
+
+        this.touched = false;
+      } else {
+        Restart();
+      }
+
+      _( this ).removeClass( 'active' );
+    };
+
+    if ( touchable ) {
+      this[ '#restart' ][ 0 ].touch = v6.vec2();
+
+      var touchmove = function ( event ) {
+        event = event.targetTouches[ 0 ];
+
+        // fix firefox `touchmove = alert`
+        if ( event.clientX !== this.touch[ 0 ] ||
+             event.clientY !== this.touch[ 1 ] )
+        {
+          this.touched = false;
+          touchend.call( this );
+        }
+      };
+
+      this[ '#restart' ]
+        .on( 'touchstart', touchstart )
+        .on( 'touchmove', touchmove )
+        .on( 'touchend', touchend );
+    }
   },
 
   show: function () {
@@ -482,7 +563,7 @@ var ui = {
 };
 
 var walls = [],
-    object, exit, renderer, stick, camera;
+    object, exit, renderer, stick, camera, ticker;
 
 _( function () {
   ui.init();
@@ -517,7 +598,7 @@ _( function () {
 
   _( window ).resize( Resize );
   Reset();
-  v6.ticker( Update, Render ).tick();
+  ticker = v6.ticker( Update, Render ).tick();
 } );
 
 } )( this );

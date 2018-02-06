@@ -358,7 +358,17 @@ Ticker.prototype.tick = function ( fps, requested ) {
   this.render.call( this, dt );
   this.lasttime = now;
   this.lastid = scotch.requestframe( this.boundtick );
-  // this.lastid = _.timer.request( this.__bound_tick );
+  return this;
+};
+
+Ticker.prototype.clear = function ( skipped ) {
+  scotch.cancelframe( this.lastid );
+  this.lasttime = scotch.timestamp();
+
+  if ( skipped ) {
+    this.skipped = 0;
+  }
+
   return this;
 };
 

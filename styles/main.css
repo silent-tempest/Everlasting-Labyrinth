@@ -7,14 +7,35 @@
   src: url( '../fonts/Ubuntu-Medium.ttf' );
 }
 
-html, body, canvas {
+canvas,
+button,
+html,
+body,
+span,
+div,
+p,
+:focus {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-focus-ring-color: transparent;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+}
+
+canvas,
+html,
+body {
   margin: 0;
 }
 
 /**
  * 1. Remove scroll and "pull-down-to-refresh".
  */
-html, body {
+html,
+body {
   padding: 0;
   overflow: hidden; /* 1 */
 }
@@ -24,31 +45,37 @@ html, body {
  */
 canvas,
 div {
-  position: fixed;
   top: 0;
   left: 0;
+}
+
+#restart,
+canvas,
+div,
+p {
+  position: fixed;
 }
 
 div {
   background: transparent;
   right: 0;
   bottom: 0;
-  z-index: 1;
+  z-index: 2;
+  display: none;
 }
 
 div.active {
   -webkit-animation: level-overlay 1s linear;
           animation: level-overlay 1s linear;
+  display: initial;
 }
 
 p {
-  position: fixed;
-  display: inline-block;
   color: #fff;
   top: 50%;
   left: 100%;
   white-space: nowrap;
-  font: 500 32px UbuntuFont, sans-serif;
+  font: 500 48px UbuntuFont, sans-serif;
 }
 
 div.active p {
@@ -57,6 +84,49 @@ div.active p {
           transform: translate( -50%, -50% );
   -webkit-animation: level 1s linear;
           animation: level 1s linear;
+}
+
+::-moz-focus-inner {
+  border: none;
+  outline: none;
+}
+
+button {
+  font: 500 18px UbuntuFont, sans-serif;
+  -webkit-transition-timing-function: ease-in-out;
+       -o-transition-timing-function: ease-in-out;
+          transition-timing-function: ease-in-out;
+  -webkit-transition-property: background, color;
+       -o-transition-property: background, color;
+          transition-property: background, color;
+  -webkit-transition-duration: 25ms;
+       -o-transition-duration: 25ms;
+          transition-duration: 25ms;
+  background: transparent;
+  border-radius: 2px;
+  min-width: 88px;
+  outline: none;
+  border: none;
+}
+
+button.active {
+  -webkit-transition-duration: 50ms;
+       -o-transition-duration: 50ms;
+          transition-duration: 50ms;
+  background: rgba( 255, 255, 255, 0.3 );
+}
+
+#restart {
+  top: 24px;
+  left: 24px;
+  z-index: 1;
+  height: 64px;
+  padding: 0 32px;
+  color: rgba( 255, 255, 255, 0.7 );
+}
+
+#restart.active {
+  color: #fff;
 }
 
 @-webkit-keyframes level-overlay {
