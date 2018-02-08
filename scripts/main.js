@@ -1,6 +1,10 @@
 /**
  * Everlasting Labyrinth
- * Released under the MIT License.
+ */
+
+/**
+ * GitHub Repository:
+ * https://github.com/silent-tempest/Everlasting-Labyrinth/
  */
 
 /**
@@ -42,7 +46,7 @@ var bazfoo = {
 
 var touchable = 'ontouchend' in window,
     // 2d doesn't work now :(
-    // on iOS, PC can be problems
+    // on iOS and PC can be problems
     mode = 'webgl';
 
 var max = Math.max,
@@ -57,12 +61,13 @@ var intersects = {
     var dx, dy;
 
     // first check rect-rect intersection
-    if ( !( ( x1 < x2 + r2 && x1 + w1 > x2 + r2 || x1 + w1 > x2 - r2 && x1 < x2 - r2 ) &&
-            ( y1 < y2 + r2 && y1 + h1 > y2 + r2 || y1 + h1 > y2 - r2 && y1 < y2 - r2 ) ) )
+    if ( x1 > x2 + r2 || x1 + w1 < x2 - r2 ||
+         y1 > y2 + r2 || y1 + h1 < y2 - r2 )
     {
       return false;
     }
 
+    // check corners
     dx = x2 - max( min( x2, x1 + w1 ), x1 );
     dy = y2 - max( min( y2, y1 + h1 ), y1 );
 
@@ -112,20 +117,14 @@ Circle.prototype = {
   },
 
   Render: function () {
-    var x = this.location[ 0 ],
-        y = this.location[ 1 ],
-        r = this.radius;
-
-    if ( IsVisible( x - r, y - r, r * 2, r * 2 ) ) {
-      renderer
-        .stroke( 255 )
-        .arc( x, y, r );
-    }
+    renderer
+      .stroke( 255 )
+      .arc( this.location[ 0 ], this.location[ 1 ], this.radius );
 
     return this;
   },
 
-  speed: 7.5,
+  speed: 8,
   constructor: Circle
 };
 
@@ -144,7 +143,7 @@ Wall.prototype = {
           object.location[ 1 ] ),
         w, h;
 
-    if ( d < FADE_END && IsVisible( x, y, w = this.w, h = this.h ) ) {
+    if ( d < FADE_END && camera.sees( renderer, x, y, w = this.w, h = this.h ) ) {
       renderer
         .stroke( v6.map( d, FADE_START, FADE_END, 255, 0, true ) )
         .rect( x, y, w, h );
@@ -157,7 +156,7 @@ Wall.prototype = {
 };
 
 if ( touchable ) {
-  var BIG_R = 50,
+  var BIG_R = 45,
       SMALL_R = BIG_R * 0.6;
 
   var foo = function ( value, size ) {
@@ -331,17 +330,6 @@ if ( touchable ) {
     constructor: Stick
   };
 }
-
-var IsVisible = function ( x, y, w, h ) {
-  var off = camera.offset,
-      scl = camera.scale[ 0 ],
-      at = camera.looksAt();
-
-  return x + w > at[ 0 ] - off[ 0 ] / scl &&
-         x     < at[ 0 ] + ( renderer.width - off[ 0 ] ) / scl &&
-         y + h > at[ 1 ] - off[ 1 ] / scl &&
-         y     < at[ 1 ] + ( renderer.height - off[ 1 ] ) / scl;
-};
 
 var Update = function ( dt ) {
   if ( object.Intersects( exit ) ) {
@@ -566,8 +554,6 @@ var walls = [],
     object, exit, renderer, stick, camera, ticker;
 
 _( function () {
-  ui.init();
-
   renderer = v6( {
     mode: mode
   } )
@@ -575,7 +561,8 @@ _( function () {
     .stroke( 255 )
     .lineWidth( 1.5 );
 
-  renderer.canvas.style.background = '#000';
+  renderer.canvas.style.background =
+    document.body.style.background = '#000';
 
   camera = renderer.camera( {
     scale: [
@@ -597,6 +584,7 @@ _( function () {
   }
 
   _( window ).resize( Resize );
+  ui.init();
   Reset();
   ticker = v6.ticker( Update, Render ).tick();
 } );

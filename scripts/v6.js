@@ -1,31 +1,10 @@
 /**
+ * Copyright (c) 2017-2018 SILENT
+ * Released under the MIT License.
  * v6.js is a JavaScript Graphic Library.
  * https://github.com/silent-tempest/v6
- *
  * p5.js:
  * https://github.com/processing/p5.js/
- *
- * MIT License
- *
- * Copyright (c) 2017-2018 SILENT
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
  */
 
 /* jshint esversion: 5 */
@@ -36,10 +15,10 @@
 
 'use strict';
 
-var document = window.document,
-    scotch = window.peako,
-    warn = window.console && window.console.warn || scotch.noop,
-    err = window.console && window.console.error || scotch.noop,
+var _ = window.peako,
+    document = window.document,
+    warn = window.console && window.console.warn || _.noop,
+    err = window.console && window.console.error || _.noop,
     floor = Math.floor,
     round = Math.round,
     atan2 = Math.atan2,
@@ -60,13 +39,13 @@ var document = window.document,
  * (no matter what jsperf says
  * "something went wrong", believe me
  * (although I don't believe myself already))
- *
- * var a = [],
- *     b = [ 1, 2, 3 ];
- *
- * copy_array( a, b, b.length );
- * // now `a` have the same elements with `b`.
  */
+
+// var a = [],
+//     b = [ 1, 2, 3 ];
+// copy_array( a, b, b.length );
+// // now `a` have the same elements with `b`.
+
 var copy_array = function ( a, b, length ) {
   while ( --length >= 0 ) {
     a[ length ] = b[ length ];
@@ -76,8 +55,7 @@ var copy_array = function ( a, b, length ) {
 };
 
 /**
- * Checks if `canvas` has `type`
- * context, using `getContext`.
+ * Checks if `canvas` has `type` context, using `getContext`.
  */
 var has_context = function ( canvas, type ) {
   try {
@@ -138,11 +116,10 @@ var default_options = {
     mode: '2d',
 
     /**
-     * MDN: Boolean that indicates if
-     * the canvas contains an alpha channel.
-     * If set to false, the browser now knows
-     * that the backdrop is always opaque,
-     * which can speed up drawing of
+     * MDN: Boolean that indicates if the canvas
+     * contains an alpha channel.  If set to false,
+     * the browser now knows  that the backdrop is
+     * always opaque,  which can speed up drawing of
      * transparent content and images.
      * https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
      */
@@ -162,17 +139,16 @@ var default_options = {
   }
 };
 
-/**
- * v6.map( 20, 0, 100, 0, 1 ); // -> 0.2
- * v6.map( -0.1, -1, 1, 0, 10 ) // -> 4.5
- */
+// v6.map( 20, 0, 100, 0, 1 ); // -> 0.2
+// v6.map( -0.1, -1, 1, 0, 10 ) // -> 4.5
+
 var map = function ( value, start1, stop1, start2, stop2, clamp ) {
   value = ( ( value - start1 ) / ( stop1 - start1 ) ) * ( stop2 - start2 ) + start2;
 
   if ( clamp ) {
     return start2 < stop2 ?
-      scotch.clamp( value, start2, stop2 ) :
-      scotch.clamp( value, stop2, start2 );
+      _.clamp( value, start2, stop2 ) :
+      _.clamp( value, stop2, start2 );
   }
 
   return value;
@@ -180,15 +156,16 @@ var map = function ( value, start1, stop1, start2, stop2, clamp ) {
 
 /**
  * Returns distance between two points.
- * v6.dist( 0, 0, 1, 1 ); // -> 1.4142135623730951
  */
+
+// v6.dist( 0, 0, 1, 1 ); // -> 1.4142135623730951
+
 var dist = function ( x1, y1, x2, y2 ) {
   return sqrt( ( x2 - x1 ) * ( x2 - x1 ) + ( y2 - y1 ) * ( y2 - y1 ) );
 };
 
-/**
- * var purple = v6.lerpColor( 'red', 'blue', 0.5 );
- */
+// var purple = v6.lerpColor( 'red', 'blue', 0.5 );
+
 var lerp_color = function ( a, b, value ) {
   return ( typeof a != 'object' ? parse_color( a ) : a ).lerp( b, value );
 };
@@ -308,10 +285,10 @@ var Ticker = function ( update, render ) {
 
   if ( render === undefined ) {
     render = update;
-    update = scotch.noop;
+    update = _.noop;
   }
 
-  ticker.lasttime = scotch.timestamp();
+  ticker.lasttime = _.timestamp();
   ticker.update = update;
   ticker.render = render;
 
@@ -320,7 +297,7 @@ var Ticker = function ( update, render ) {
   };
 };
 
-Ticker.prototype = scotch.create( null );
+Ticker.prototype = _.create( null );
 Ticker.prototype.constructor = Ticker;
 Ticker.prototype.step = 1 / 60;
 Ticker.prototype.stopped = true;
@@ -343,7 +320,7 @@ Ticker.prototype.tick = function ( fps, requested ) {
     this.step = 1 / fps;
   }
 
-  var now = scotch.timestamp(),
+  var now = _.timestamp(),
       dt = min( 1, ( now - this.lasttime ) * 0.001 ),
       step = this.step;
 
@@ -357,13 +334,13 @@ Ticker.prototype.tick = function ( fps, requested ) {
 
   this.render.call( this, dt );
   this.lasttime = now;
-  this.lastid = scotch.requestframe( this.boundtick );
+  this.lastid = _.timer.request( this.boundtick );
   return this;
 };
 
 Ticker.prototype.clear = function ( skipped ) {
-  scotch.cancelframe( this.lastid );
-  this.lasttime = scotch.timestamp();
+  _.timer.cancel( this.lastid );
+  this.lasttime = _.timestamp();
 
   if ( skipped ) {
     this.skipped = 0;
@@ -387,7 +364,7 @@ var Vector2D = function ( x, y ) {
   this.set( x, y );
 };
 
-Vector2D.prototype = scotch.create( null );
+Vector2D.prototype = _.create( null );
 Vector2D.prototype.constructor = Vector2D;
 Vector2D.prototype.length = 2;
 
@@ -535,7 +512,7 @@ var Vector3D = function ( x, y, z ) {
   this.set( x, y, z );
 };
 
-Vector3D.prototype = scotch.create( null );
+Vector3D.prototype = _.create( null );
 Vector3D.prototype.constructor = Vector3D;
 Vector3D.prototype.length = 3;
 
@@ -792,7 +769,7 @@ var rhsl = /^hsl\s*\(\s*(\d+|\d*\.\d+)\s*,\s*(\d+|\d*\.\d+)\u0025\s*,\s*(\d+|\d*
     rrgb = /^rgb\s*\(\s*(\d+|\d*\.\d+)\s*,\s*(\d+|\d*\.\d+)\s*,\s*(\d+|\d*\.\d+)\s*\)$|^\s*rgba\s*\(\s*(\d+|\d*\.\d+)\s*,\s*(\d+|\d*\.\d+)\s*,\s*(\d+|\d*\.\d+)\s*,\s*(\d+|\d*\.\d+)\s*\)$/,
     rhex = /^(?:#)([0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])([0-9a-f][0-9a-f])?$/,
     rhex3 = /^(?:#)([0-9a-f])([0-9a-f])([0-9a-f])([0-9a-f])?$/,
-    parsed = scotch.create( null ),
+    parsed = _.create( null ),
     transparent = [ 0, 0, 0, 0 ];
 
 var color = function ( a, b, c, d ) {
@@ -819,7 +796,7 @@ var color = function ( a, b, c, d ) {
  */
 var parse_color = function ( string ) {
   var cache = parsed[ string ] ||
-    parsed[ string = scotch.trim( string ).toLowerCase() ];
+    parsed[ string = _.trim( string ).toLowerCase() ];
 
   if ( !cache ) {
     if ( ( cache = colors[ string ] ) ) {
@@ -908,7 +885,7 @@ var RGBA = function ( r, g, b, a ) {
   this.set( r, g, b, a );
 };
 
-RGBA.prototype = scotch.create( null );
+RGBA.prototype = _.create( null );
 RGBA.prototype.constructor = RGBA;
 RGBA.prototype.type = 'rgba';
 
@@ -1044,7 +1021,7 @@ var HSLA = function ( h, s, l, a ) {
   this.set( h, s, l, a );
 };
 
-HSLA.prototype = scotch.create( null );
+HSLA.prototype = _.create( null );
 HSLA.prototype.constructor = HSLA;
 HSLA.prototype.type = 'hsla';
 
@@ -1151,7 +1128,7 @@ var ColorData = function ( match, constructor ) {
   this.constructor = constructor;
 };
 
-ColorData.prototype = scotch.create( null );
+ColorData.prototype = _.create( null );
 
 /* FONT */
 
@@ -1189,7 +1166,7 @@ var Font = function ( style, variant, weight, size, family ) {
   this.set( style, variant, weight, size, family );
 };
 
-Font.prototype = scotch.create( null );
+Font.prototype = _.create( null );
 Font.prototype.constructor = Font;
 Font.prototype.style = Font.prototype.variant = Font.prototype.weight = 'normal';
 Font.prototype.size = 'medium';
@@ -1295,7 +1272,7 @@ var Image = function ( path, x, y, w, h ) {
       if ( !path.loaded ) {
         var image = this;
 
-        scotch( this.source ).one( 'load', function () {
+        _( this.source ).one( 'load', function () {
           image.set( x, y, w, h, true );
         } );
       } else {
@@ -1310,7 +1287,7 @@ var Image = function ( path, x, y, w, h ) {
   }
 };
 
-Image.prototype = scotch.create( null );
+Image.prototype = _.create( null );
 Image.prototype.constructor = Image;
 Image.prototype.x = Image.prototype.y = Image.prototype.width = Image.prototype.height = 0;
 Image.prototype.loaded = false;
@@ -1336,7 +1313,7 @@ Image.prototype.load = function ( path, x, y, w, h ) {
   var image = this.set( 0, 0, 0, 0, false ),
       source = image.source;
 
-  scotch( source ).one( 'load', function () {
+  _( source ).one( 'load', function () {
     image.set( x, y, w, h, true );
   } );
 
@@ -1351,10 +1328,10 @@ var loader = function () {
 };
 
 var Loader = function () {
-  this.list = scotch.create( null );
+  this.list = _.create( null );
 };
 
-Loader.prototype = scotch.create( null );
+Loader.prototype = _.create( null );
 Loader.prototype.constructor = Loader;
 
 /**
@@ -1365,7 +1342,7 @@ Loader.prototype.constructor = Loader;
  */
 Loader.prototype.add = function ( name, path ) {
   if ( typeof name == 'object' ) {
-    if ( scotch.isArray( name ) ) {
+    if ( _.isArray( name ) ) {
       var list = this.list,
           len = name.length,
           i = 0;
@@ -1374,7 +1351,7 @@ Loader.prototype.add = function ( name, path ) {
         list[ name[ i ] ] = name[ i + 1 ];
       }
     } else if ( name != null ) {
-      scotch.assign( this.list, name );
+      _.assign( this.list, name );
     } else {
       throw TypeError();
     }
@@ -1388,11 +1365,11 @@ Loader.prototype.add = function ( name, path ) {
 };
 
 var get_promise = function ( path, name ) {
-  return new scotch.Promise( /\.(?:png|jpe?g)$/i.test( path ) ? function ( resolve, reject ) {
+  return new _.Promise( /\.(?:png|jpe?g)$/i.test( path ) ? function ( resolve, reject ) {
     var image = new Image( path );
 
     if ( !image.loaded ) {
-      var $source = scotch( image.source );
+      var $source = _( image.source );
 
       var load = function () {
         $source.off( 'error', error );
@@ -1411,7 +1388,7 @@ var get_promise = function ( path, name ) {
       resolve( [ name, image ] );
     }
   } : function ( resolve, reject ) {
-    scotch.file( path, {
+    _.file( path, {
       onload: function ( file ) {
         resolve( [ name, file ] );
       },
@@ -1441,7 +1418,7 @@ var load_err = function ( data ) {
 
 Loader.prototype.load = function ( setup, error ) {
   var list = this.list,
-      names = scotch.keys( list ),
+      names = _.keys( list ),
       length = names.length,
       promises = Array( length ),
       i = 0;
@@ -1450,7 +1427,7 @@ Loader.prototype.load = function ( setup, error ) {
     promises[ i ] = get_promise( list[ names[ i ] ], names[ i ] );
   }
 
-  scotch.Promise.all( promises )
+  _.Promise.all( promises )
     .then( setup, error || load_err );
 
   return this;
@@ -1534,7 +1511,7 @@ var Renderer2D = function ( options ) {
   };
 };
 
-Renderer2D.prototype = scotch.create( null );
+Renderer2D.prototype = _.create( null );
 Renderer2D.prototype.constructor = Renderer2D;
 
 /**
@@ -1550,7 +1527,7 @@ Renderer2D.prototype.add = function () {
  * and remove it from the html.
  */
 Renderer2D.prototype.destroy = function () {
-  return scotch( this.canvas ).off().remove(), this;
+  return _( this.canvas ).off().remove(), this;
 };
 
 /**
@@ -1596,7 +1573,7 @@ Renderer2D.prototype.resize = function ( w, h ) {
 };
 
 Renderer2D.prototype.fullwindow = function () {
-  var window = scotch( this.canvas.ownerDocument.defaultView );
+  var window = _( this.canvas.ownerDocument.defaultView );
   return this.resize( window.width(), window.height() );
 };
 
@@ -2021,7 +1998,7 @@ Renderer2D.prototype._stroke = function ( close ) {
 };
 
 Renderer2D.prototype.camera = function ( options ) {
-  options = scotch.assign( {
+  options = _.assign( {
     offset: new Vector2D( this.width * 0.5, this.height * 0.5 )
   }, options );
 
@@ -2041,7 +2018,7 @@ Renderer2D.prototype.setTransformFromCamera = function ( camera ) {
     location[ 1 ] * scale );
 };
 
-scotch.forInRight( {
+_.forOwnRight( {
   fontVariant: 'variant', fontStyle: 'style',
   fontWeight:  'weight',  fontSize:  'size',
   fontFamily:  'family'
@@ -2051,7 +2028,7 @@ scotch.forInRight( {
   /* jshint evil: false */
 }, Renderer2D.prototype );
 
-scotch.forEachRight( [
+_.forEachRight( [
   'scale',  'translate', 'moveTo', 'lineTo', 'setTransform', 'transform'
 ], function ( name ) {
   /* jshint evil: true */
@@ -2059,7 +2036,7 @@ scotch.forEachRight( [
   /* jshint evil: false */
 }, Renderer2D.prototype );
 
-scotch.forEachRight( [
+_.forEachRight( [
   'lineWidth', 'lineHeight', 'textAlign', 'textBaseline'
 ], function ( name ) {
   /* jshint evil: true */
@@ -2067,8 +2044,8 @@ scotch.forEachRight( [
   /* jshint evil: false */
 }, Renderer2D.prototype );
 
-scotch.forInRight( { fill: 'fillStyle', stroke: 'strokeStyle' }, function ( name, method_name ) {
-  var style = scotch.upperFirst( method_name ),
+_.forOwnRight( { fill: 'fillStyle', stroke: 'strokeStyle' }, function ( name, method_name ) {
+  var style = _.upperFirst( method_name ),
       do_style = 'do' + style,
       _method_name = '_' + method_name;
 
@@ -2102,14 +2079,14 @@ var Program = function ( context, vShader, fShader ) {
   this.context = context;
   this.vShader = vShader;
   this.fShader = fShader;
-  this.attributes = scotch.create( null );
-  this.uniforms = scotch.create( null );
+  this.attributes = _.create( null );
+  this.uniforms = _.create( null );
   this.samplers = [];
   this.loadAttributes();
   this.loadUniforms();
 };
 
-Program.prototype = scotch.create( null );
+Program.prototype = _.create( null );
 Program.prototype.constructor = Program;
 Program.prototype.loadedAttributes = Program.prototype.loadedUniforms = false;
 
@@ -2124,7 +2101,7 @@ Program.prototype.loadAttributes = function () {
     for ( ; i >= 0; --i ) {
       info = gl.getActiveAttrib( program, i );
       name = info.name;
-      attr = attrs[ name ] = scotch.create( null );
+      attr = attrs[ name ] = _.create( null );
       attr.name = name;
       attr.type = info.type;
       attr.size = info.size;
@@ -2150,7 +2127,7 @@ Program.prototype.loadUniforms = function () {
     for ( ; i >= 0; --i ) {
       info = gl.getActiveUniform( program, i );
       name = info.name;
-      uniform = scotch.create( null );
+      uniform = _.create( null );
       uniform.size = info.size;
       uniform.type = info.type;
       uniform.location = gl.getUniformLocation( program, name );
@@ -2232,10 +2209,10 @@ var shader = function ( v, f ) {
 var Shader = function ( v, f ) {
   this.vShaderSource = v;
   this.fShaderSource = f;
-  this.programs = scotch.create( null );
+  this.programs = _.create( null );
 };
 
-Shader.prototype = scotch.create( null );
+Shader.prototype = _.create( null );
 Shader.prototype.constructor = Shader;
 
 Shader.prototype.create = function ( renderer ) {
@@ -2307,7 +2284,7 @@ var Buffer = function ( context ) {
   this.buffer = context.createBuffer();
 };
 
-Buffer.prototype = scotch.create( null );
+Buffer.prototype = _.create( null );
 Buffer.prototype.constructor = Buffer;
 
 Buffer.prototype.bind = function () {
@@ -2327,7 +2304,7 @@ var Transform = function () {
   this.matrix = mat3.identity();
 };
 
-Transform.prototype = scotch.create( null );
+Transform.prototype = _.create( null );
 Transform.prototype.constructor = Transform;
 Transform.prototype.index = -1;
 
@@ -2534,7 +2511,7 @@ var RendererWebGL = function ( options ) {
   this.blending( true );
 };
 
-RendererWebGL.prototype = scotch.create( null );
+RendererWebGL.prototype = _.create( null );
 RendererWebGL.prototype.constructor = RendererWebGL;
 RendererWebGL.prototype.add = Renderer2D.prototype.add;
 RendererWebGL.prototype.destroy = Renderer2D.prototype.destroy;
@@ -2736,7 +2713,7 @@ RendererWebGL.prototype.line = function ( x1, y1, x2, y2 ) {
 /**
  * Cached polygons vertices.
  */
-var polygons = scotch.create( null );
+var polygons = _.create( null );
 
 /**
  * Creates polygon vertices with `n` resolution.
@@ -2891,9 +2868,9 @@ RendererWebGL.prototype.setTransformFromCamera = Renderer2D.prototype.setTransfo
 
 var defaults = function ( options, defaults ) {
   if ( options === undefined ) {
-    options = scotch.clone( true, defaults );
+    options = _.clone( true, defaults );
   } else {
-    options = scotch.defaults( defaults, options );
+    options = _.defaults( defaults, options );
   }
 
   return options;
@@ -3019,6 +2996,26 @@ Camera.prototype = {
     return new Vector2D(
       ( this.offset[ 0 ] - this.location[ 0 ] * scl ) / scl,
       ( this.offset[ 1 ] - this.location[ 1 ] * scl ) / scl );
+  },
+
+  /** There is no need to draw something if it's not visible. */
+ 
+  // if ( camera.sees( renderer,
+  //   object.x, object.y,
+  //   object.w, object.h ) )
+  // {
+  //   object.show();
+  // }
+
+  sees: function ( renderer, x, y, w, h ) {
+    var off = this.offset,
+        scl = this.scale[ 0 ],
+        at = this.looksAt();
+
+    return x + w > at[ 0 ] - off[ 0 ] / scl &&
+           x     < at[ 0 ] + ( renderer.width - off[ 0 ] ) / scl &&
+           y + h > at[ 1 ] - off[ 1 ] / scl &&
+           y     < at[ 1 ] + ( renderer.height - off[ 1 ] ) / scl;
   },
 
   constructor: Camera
