@@ -11,6 +11,7 @@
 /* jshint unused: true */
 /* jshint undef: true */
 /* global Float32Array, Uint8ClampedArray, ImageData */
+
 ;( function ( window, undefined ) {
 
 'use strict';
@@ -118,7 +119,7 @@ var default_options = {
     /**
      * MDN: Boolean that indicates if the canvas
      * contains an alpha channel.  If set to false,
-     * the browser now knows  that the backdrop is
+     * the browser now knows that the backdrop is
      * always opaque,  which can speed up drawing of
      * transparent content and images.
      * https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
@@ -127,15 +128,6 @@ var default_options = {
 
     /** Will be renderer added to the DOM? */
     append: true
-  },
-
-  camera: {
-    /**
-     * Number between 0 and 1:
-     * When 1 camera will be "fixed" on lookAt location.
-     * When 0.01 camera will be smooth.
-     */
-    speed: 1
   }
 };
 
@@ -449,20 +441,25 @@ Vector2D.prototype.setMag = function ( value ) {
 Vector2D.prototype.normalize = function () {
   var mag = this.mag();
 
-  return mag && mag !== 1 ?
-    this.div( mag ) : this;
+  if ( mag && mag !== 1 ) {
+    this.div( mag );
+  }
+
+  return this;
 };
 
 Vector2D.prototype.rotate = function ( angle ) {
+  var length = this.mag();
+
   if ( settings.degrees ) {
     angle = angle * pi / 180 + this.angle();
   } else {
     angle += this.angle();
   }
 
-  var length = this.mag();
   this[ 0 ] = length * cos( angle );
   this[ 1 ] = length * sin( angle );
+
   return this;
 };
 
@@ -487,8 +484,11 @@ Vector2D.prototype.dist = function ( vector ) {
 Vector2D.prototype.limit = function ( value ) {
   var mag = this.magSq();
 
-  return mag > value * value && ( mag = sqrt( mag ) ) ?
-    this.div( mag ).mult( value ) : this;
+  if ( mag > value * value && ( mag = sqrt( mag ) ) ) {
+    this.div( mag ).mult( value );
+  }
+
+  return this;
 };
 
 Vector2D.prototype.cross = function( vector ) {
@@ -1998,11 +1998,7 @@ Renderer2D.prototype._stroke = function ( close ) {
 };
 
 Renderer2D.prototype.camera = function ( options ) {
-  options = _.assign( {
-    offset: new Vector2D( this.width * 0.5, this.height * 0.5 )
-  }, options );
-
-  return new Camera( options );
+  return new Camera( options, this );
 };
 
 Renderer2D.prototype.setTransformFromCamera = function ( camera ) {
@@ -2442,8 +2438,6 @@ var mat3 = {
   }
 };
 
-/* RENDERERWEBGL */
-
 var default_shaders = {
 
   vertex:
@@ -2493,9 +2487,14 @@ var default_shaders = {
 var shaders = new Shader( default_shaders.vertex, default_shaders.fragment ),
     background_shaders = new Shader( default_shaders.background_vertex, default_shaders.background_fragment );
 
+/**
+ * In most cases, on phones (except iOS Safari)
+ * `RendererWebGL` works faster than `Renderer2D`.
+ */
+
 var RendererWebGL = function ( options ) {
   create_renderer( this, 'webgl', options );
-  /** For transformation functions (scale, translate...). */
+  /** For transformation functions (scale, translate, save...). */
   this.matrix = new Transform();
   /** Standard buffer, shaders, program - will be used in most cases. */
   this.buffer = new Buffer( this.context );
@@ -2867,13 +2866,11 @@ RendererWebGL.prototype.camera = Renderer2D.prototype.camera;
 RendererWebGL.prototype.setTransformFromCamera = Renderer2D.prototype.setTransformFromCamera;
 
 var defaults = function ( options, defaults ) {
-  if ( options === undefined ) {
-    options = _.clone( true, defaults );
-  } else {
-    options = _.defaults( defaults, options );
+  if ( options ) {
+    return _.mixin( true, {}, defaults, options );
   }
 
-  return options;
+  return _.mixin( true, {}, defaults );
 };
 
 /** Initializes the renderer. */
@@ -2882,9 +2879,9 @@ var create_renderer = function ( renderer, mode, options ) {
   renderer.settings = options.settings;
   renderer.mode = mode;
   renderer.index = ++renderer_index;
-  /** Stack of saved styles. */
+  /** Stack of saved styles (push, pop). */
   renderer.saves = [];
-  /** Shape vertices. */
+  /** Shape vertices (beginShape, vertex, endShape). */
   renderer.vertices = [];
 
   if ( !options.canvas ) {
@@ -2934,34 +2931,66 @@ var create_renderer = function ( renderer, mode, options ) {
   }
 };
 
-/* CAMERA */
+/**
+ * Using `Camera` class, you can easily make
+ * a camera for the game (or not for the game)
+ * and easily operate it.
+ */
 
-// var camera = v6.camera( options );
-// var camera = new v6.Camera( options );
-// // default offset to renderer center
-// var camera = renderer.camera( options );
+var camera = function ( options, renderer ) {
+  return new Camera( options, renderer );
+};
 
-var Camera = function ( options ) {
-  options = defaults( options, default_options.camera );
+var Camera = function ( options, renderer ) {
+  if ( !options ) {
+    options = {};
+  }
 
-  // float between 0 and 1
-  // 1 when camera should be "fixed"
-  // 0.1 camera will be smooth
-  this.speed = options.speed;
-
-  // zoom-in/out will be added
-  this.scale = options.scale || [
-    1, // scale
-    1, // min scale
-    1  // max scale
+  /**
+   * Numbers between 0 and 1:
+   * 1 - the camera will move at the speed of light
+   * 0.1 - the camera will be similar to the real operator
+   */
+  this.speed = options.speed || [
+    1, // x speed
+    1, // y speed
+    1, // zoom in speed
+    1  // zoom out speed
   ];
 
-  this.offset = options.offset || new Vector2D();
+  this.scale = options.scale || [
+    1, // scale
+    1, // min scale (zoom out)
+    1  // max scale (zoom in)
+  ];
+
+  /**
+   * Offset from the top-left corner of the
+   * renderer to the `lookAt` position.
+   */
+  this.offset = options.offset;
+
+  if ( renderer ) {
+    if ( !this.offset ) {
+      this.offset = new Vector2D( renderer.width * 0.5, renderer.height * 0.5 );
+    }
+
+    /** Uses in `sees` function. */
+    this.renderer = renderer;
+  } else if ( !this.offset ) {
+    this.offset = new Vector2D();
+  }
 
   this.location = [
     0, 0, // current location
     0, 0  // tranformed location of the object to be viewed
   ];
+
+  /** Will be zoom in/out animation with the linear effect? */
+  this.linearZoom = options.linearZoom || {
+    zoomIn : true,
+    zoomOut: true
+  };
 };
 
 Camera.prototype = {
@@ -2972,11 +3001,11 @@ Camera.prototype = {
         spd = this.speed;
 
     if ( loc[ 0 ] !== loc[ 2 ] ) {
-      loc[ 0 ] += ( loc[ 2 ] - loc[ 0 ] ) * spd;
+      loc[ 0 ] += ( loc[ 2 ] - loc[ 0 ] ) * spd[ 0 ];
     }
 
     if ( loc[ 1 ] !== loc[ 3 ] ) {
-      loc[ 1 ] += ( loc[ 3 ] - loc[ 1 ] ) * spd;
+      loc[ 1 ] += ( loc[ 3 ] - loc[ 1 ] ) * spd[ 1 ];
     }
 
     return this;
@@ -3000,22 +3029,56 @@ Camera.prototype = {
 
   /** There is no need to draw something if it's not visible. */
  
-  // if ( camera.sees( renderer,
-  //   object.x, object.y,
-  //   object.w, object.h ) )
-  // {
+  // if ( camera.sees( object.x, object.y, object.w, object.h ) ) {
   //   object.show();
   // }
 
-  sees: function ( renderer, x, y, w, h ) {
+  sees: function ( x, y, w, h, renderer ) {
     var off = this.offset,
         scl = this.scale[ 0 ],
         at = this.looksAt();
+
+    if ( !renderer ) {
+      renderer = this.renderer;
+    }
 
     return x + w > at[ 0 ] - off[ 0 ] / scl &&
            x     < at[ 0 ] + ( renderer.width - off[ 0 ] ) / scl &&
            y + h > at[ 1 ] - off[ 1 ] / scl &&
            y     < at[ 1 ] + ( renderer.height - off[ 1 ] ) / scl;
+  },
+
+  /** Increases `scale[0]` to `scale[2]` with `speed[2]` speed. */
+  zoomIn: function () {
+    var scl = this.scale,
+        spd;
+
+    if ( scl[ 0 ] !== scl[ 2 ] ) {
+      if ( this.linearZoom.zoomIn ) {
+        spd = this.speed[ 2 ] * scl[ 0 ];
+      } else {
+        spd = this.speed[ 2 ];
+      }
+
+      scl[ 0 ] = min( scl[ 0 ] + spd, scl[ 2 ] );
+    }
+  },
+
+  /** Decreases `scale[0]` to `scale[1]` with `speed[3]` speed. */
+  zoomOut: function () {
+    // copy-paste :(
+    var scl = this.scale,
+        spd;
+
+    if ( scl[ 0 ] !== scl[ 1 ] ) {
+      if ( this.linearZoom.zoomOut ) {
+        spd = this.speed[ 3 ] * scl[ 0 ];
+      } else {
+        spd = this.speed[ 3 ];
+      }
+
+      scl[ 0 ] = max( scl[ 0 ] - spd, scl[ 1 ] );
+    }
   },
 
   constructor: Camera
@@ -3037,6 +3100,7 @@ v6.Transform = Transform;
 v6.Renderer2D = Renderer2D;
 v6.RendererWebGL = RendererWebGL;
 v6.ticker = ticker;
+v6.camera = camera;
 v6.vec2 = vec2;
 v6.vec3 = vec3;
 v6.rgba = rgba;

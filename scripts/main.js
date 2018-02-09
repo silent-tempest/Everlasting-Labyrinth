@@ -143,7 +143,7 @@ Wall.prototype = {
           object.location[ 1 ] ),
         w, h;
 
-    if ( d < FADE_END && camera.sees( renderer, x, y, w = this.w, h = this.h ) ) {
+    if ( d < FADE_END && camera.sees( x, y, w = this.w, h = this.h ) ) {
       renderer
         .stroke( v6.map( d, FADE_START, FADE_END, 255, 0, true ) )
         .rect( x, y, w, h );
@@ -349,7 +349,7 @@ var Update = function ( dt ) {
 
   camera
     .lookAt( object.location )
-    .update( dt );
+    .update()
 };
 
 var Render = function () {
@@ -565,11 +565,14 @@ _( function () {
     document.body.style.background = '#000';
 
   camera = renderer.camera( {
-    scale: [
-      CAMERA_ZOOM
+    speed: [
+      CAMERA_SPEED,
+      CAMERA_SPEED
     ],
 
-    speed: CAMERA_SPEED
+    scale: [
+      CAMERA_ZOOM
+    ]
   } );
 
   if ( touchable ) {
