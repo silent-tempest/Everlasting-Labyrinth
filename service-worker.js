@@ -6,6 +6,7 @@ var paths = [
   'scripts/peako.js',
   'scripts/v6.js',
   'scripts/mazegenerator.js',
+  'scripts/platform.js',
   'scripts/main.js',
   'styles/main.css'
 ];

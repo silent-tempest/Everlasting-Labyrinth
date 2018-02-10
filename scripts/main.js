@@ -15,10 +15,8 @@
  * https://github.com/dstromberg2/maze-generator
  */
 
-/* jshint esversion: 5 */
-/* jshint unused: true */
-/* jshint undef: true */
-/* global newMaze, v6, _ */
+/* jshint esversion: 5, unused: true, undef: true */
+/* global newMaze, v6, _, document, platform */
 
 ;( function ( window ) {
 
@@ -27,11 +25,13 @@
 var level = 1,
     final_level = 10;
 
-var CAMERA_ZOOM = 16,
+var CAMERA_ZOOM = 1,
     CAMERA_SPEED = 0.1;
 
-var FADE_START = 0,
-    FADE_END = 15;
+var SIZE = 16;
+
+var FADE_START = 0 * SIZE,
+    FADE_END = 15 * SIZE;
 
 var OBJECTS = {
   WALL  : '#',
@@ -44,10 +44,13 @@ var bazfoo = {
   '1': null
 };
 
+/** WebGL slow in iOS Safari and on PC. */
+var safari = platform.os &&
+  platform.os.family === 'iOS' &&
+  platform.name === 'Safari';
+
 var touchable = 'ontouchend' in window,
-    // 2d doesn't work now :(
-    // on iOS and PC can be problems
-    mode = 'webgl';
+    mode = touchable && !safari ? 'webgl' : '2d';
 
 var max = Math.max,
     min = Math.min;
@@ -124,7 +127,7 @@ Circle.prototype = {
     return this;
   },
 
-  speed: 8,
+  speed: 8 * SIZE,
   constructor: Circle
 };
 
@@ -159,10 +162,12 @@ if ( touchable ) {
   var BIG_R = 45,
       SMALL_R = BIG_R * 0.6;
 
+  /** Makes from 3D-like normalized coordinates 2D. */
   var foo = function ( value, size ) {
     return ( value + 1 ) * 0.5 * size;
   };
 
+  /** Converts touch zone with 3D coordinates in 2D. */
   var GetTouchZone = function ( values, w, h ) {
     var x1 = foo( values[ 0 ], w ),
         y1 = foo( values[ 1 ], h ),
@@ -174,6 +179,7 @@ if ( touchable ) {
     ];
   };
 
+  /** One stick of gamepad. */
   var Stick = function ( options ) {
     var renderer_options = {
       mode: mode
@@ -182,7 +188,7 @@ if ( touchable ) {
     var that = this,
         renderer = that.renderer =
           v6( renderer_options ).noFill(),
-        identifiers = _.create( null ),
+        identifiers = that.__identifiers = [],
         start = that.start = v6.vec2(),
         location = that.location = v6.vec2(),
         touch_zone;
@@ -196,8 +202,8 @@ if ( touchable ) {
       while ( i > 0 ) {
         touch = touches[ --i ];
 
-        touched =
-          identifiers[ touch.identifier ] =
+        /** A finger on the stick touch zone? */
+        touched = identifiers[ touch.identifier ] =
           intersects[ 'rectangle-point' ](
             touch_zone[ 0 ],
             touch_zone[ 1 ],
@@ -206,7 +212,9 @@ if ( touchable ) {
             x = touch.clientX,
             y = touch.clientY );
 
+        /** If yes, and this last event from the `touches` (reverse loop). */
         if ( touched && unset ) {
+          /** Then handle it! */
           start.set( x, y );
           that.state = 1;
           that.redraw = unset = true;
@@ -221,11 +229,11 @@ if ( touchable ) {
           touch;
 
       while ( i > 0 ) {
+        /** if this finger interacts with the stick (on `touchstart` was in the touch zone). */
         if ( identifiers[ ( touch = touches[ --i ] ).identifier ] ) {
+          /** Move the movable part of the stick. */
           location
-            .set(
-              touch.clientX - start[ 0 ],
-              touch.clientY - start[ 1 ] )
+            .set( touch.clientX - start[ 0 ], touch.clientY - start[ 1 ] )
             .limit( BIG_R );
           that.state = 2;
           that.redraw = true;
@@ -242,6 +250,7 @@ if ( touchable ) {
           id;
 
       while ( i > 0 ) {
+        /** if this finger interacts with the stick before. */
         if ( identifiers[ id = touches[ --i ].identifier ] ) {
           if ( unset ) {
             that.cancel();
@@ -254,6 +263,7 @@ if ( touchable ) {
     };
 
     var resize = function ( event ) {
+      /** We'll call this function below. */
       if ( event ) {
         renderer.fullwindow();
       }
@@ -263,11 +273,9 @@ if ( touchable ) {
         renderer.width,
         renderer.height );
 
-      start.set(
-        that.x = foo( options.x, renderer.width ),
-        that.y = foo( options.y, renderer.height ) );
-
-      that.redraw = true;
+      that.x = foo( options.x, renderer.width );
+      that.y = foo( options.y, renderer.height );
+      that.cancel();
     };
 
     resize();
@@ -281,33 +289,33 @@ if ( touchable ) {
 
   Stick.prototype = {
     show: function () {
-      var renderer = this.renderer,
-          start = this.start,
-          location = this.location;
-
-      renderer
+      this.renderer
         .restore()
         .clear()
         .save()
-        .setTransform( 1, 0, 0, 1, start[ 0 ], start[ 1 ] )
+        .setTransform( 1, 0, 0, 1, this.start[ 0 ], this.start[ 1 ] )
         .stroke( this.colors[ this.state ] )
         .polygon( 0, 0, BIG_R, 8 )
-        .polygon( location[ 0 ], location[ 1 ], SMALL_R, 8 );
+        .polygon( this.location[ 0 ], this.location[ 1 ], SMALL_R, 8 );
 
       this.redraw = false;
       return this;
     },
 
     value: function () {
-      return this._value == null ?
-        this._value = this.location.mag() / BIG_R :
-        this._value;
+      if ( this._value == null ) {
+        this._value = this.location.mag() / BIG_R;
+      }
+
+      return this._value;
     },
 
     angle: function () {
-      return this._angle == null ?
-        this._angle = this.location.angle() :
-        this._angle;
+      if ( this._angle == null ) {
+        this._angle = this.location.angle();
+      }
+
+      return this._angle;
     },
 
     cancel: function () {
@@ -316,6 +324,7 @@ if ( touchable ) {
       this.state = 0;
       this.redraw = true;
       this._angle = this._value = null;
+      this.__identifiers.length = 0;
       return this;
     },
 
@@ -349,7 +358,7 @@ var Update = function ( dt ) {
 
   camera
     .lookAt( object.location )
-    .update()
+    .update();
 };
 
 var Render = function () {
@@ -405,20 +414,23 @@ var MakeMapFromMaze = function ( maze, x, y ) {
 
 var MakeWorldFromMap = function ( map ) {
   var j = map.length - 1,
-      i, ch, row;
+      i, x, y, ch, row;
 
   walls.length = 0;
 
   for ( ; j >= 0; --j ) {
     i = ( row = map[ j ] ).length - 1;
+    y = j * SIZE;
 
     for ( ; i >= 0; --i ) {
+      x = i * SIZE;
+
       if ( ( ch = row[ i ] ) === OBJECTS.WALL ) {
-        walls.push( new Wall( i, j, 1, 1 ) );
+        walls.push( new Wall( x, y, SIZE, SIZE ) );
       } else if ( ch === OBJECTS.PLAYER ) {
-        object = new Circle( i + 0.5, j + 0.5, 0.25 );
+        object = new Circle( x + SIZE * 0.5, y + SIZE * 0.5, SIZE * 0.25 );
       } else if ( ch === OBJECTS.EXIT ) {
-        exit = new Wall( i, j, 1, 1 );
+        exit = new Wall( x, y, SIZE, SIZE );
       }
     }
   }
